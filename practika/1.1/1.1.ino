@@ -1,46 +1,14 @@
-int currentLED = D0;  
-bool buttonWasPressed = false; 
 
+// the setup function runs once when you press reset or power the board
 void setup() {
-  pinMode(D0, OUTPUT);    
-  pinMode(D1, OUTPUT);  
-  pinMode(D2, OUTPUT);   
-  pinMode(D3, INPUT);      
-  
-  digitalWrite(D0, LOW);
-  digitalWrite(D1, LOW);
-  digitalWrite(D2, LOW);
+  // initialize digital pin LED_BUILTIN as an output.
+  pinMode(D0, OUTPUT);
 }
 
+// the loop function runs over and over again forever
 void loop() {
-  int buttonState = digitalRead(D3);  
-
-  if (buttonState == HIGH && !buttonWasPressed) {
-    currentLED = getNextLED(currentLED);
-    updateLED(currentLED);
-    buttonWasPressed = true;
-  } else if (buttonState == LOW) {
-    buttonWasPressed = false;
-  }
-}
-
-
-int getNextLED(int current) {
-  if (current == D0) {
-    return D1;
-  } else if (current == D1) {
-    return D2;
-  } else {
-    return D0;
-  }
-}
-
-
-void updateLED(int current) {
-
-  digitalWrite(D0, LOW);
-  digitalWrite(D1, LOW);
-  digitalWrite(D2, LOW);
-
-  digitalWrite(current, HIGH);
+  digitalWrite(D0, HIGH);  // turn the LED on (HIGH is the voltage level)
+  delay(1000);                      // wait for a second
+  digitalWrite(D0, LOW);   // turn the LED off by making the voltage LOW
+  delay(1000);                      // wait for a second
 }
