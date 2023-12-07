@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Device.I2c;
 using Iot.Device;
@@ -9,6 +9,7 @@ using Raven.Iot.Device.Ina219;
 using UnitsNet;
 using Spire.Xls;
 using System.Device.Gpio;
+using System.Text;
 
 if (DeviceHelper.GetIna219Devices() is [I2cConnectionSettings settings])
 {
@@ -32,7 +33,7 @@ if (DeviceHelper.GetIna219Devices() is [I2cConnectionSettings settings])
 
     for (int i = 0; i < data.Length; i++)
     {
-        data.Span[i] = new Storage(ina219.ReadBusVoltage(), ina219.ReadCurrent(), ina219.ReadPower(), TimeProvider.System.GetUtcNow());
+        data.Span[i] = new Storage(ina219.ReadBusVoltage(), ina219.ReadCurrent(), ina219.ReadPower(), TimeProvider.System.GetLocalNow());
 
         await Task.Delay(10000);
     }
@@ -46,27 +47,21 @@ if (DeviceHelper.GetIna219Devices() is [I2cConnectionSettings settings])
 
 void WriteData(Memory<Storage> data)
 {
-    Workbook workbook = new Workbook();
-
-    Worksheet worksheet = workbook.Worksheets[0];
-
-    worksheet.Range[1, 1].Value = $"Date, Time";
-    worksheet.Range[1, 2].Value = $"Voltage, {UnitAbbreviationsCache.Default.GetDefaultAbbreviation(data.Span[0].Voltage.Unit)}";
-    worksheet.Range[1, 3].Value = $"Current, {UnitAbbreviationsCache.Default.GetDefaultAbbreviation(data.Span[0].Voltage.Unit)}";
-    worksheet.Range[1, 4].Value = $"Power, {UnitAbbreviationsCache.Default.GetDefaultAbbreviation(data.Span[0].Voltage.Unit)}";
-    CellStyle style = workbook.Styles.Add("newStyle");
-    style.Font.IsBold = true;
-    worksheet.Range[1, 1, 1, 3].Style = style;
-    for (int i = 0; i < data.Length; i++)
+    string currentDirectory = Directory.GetCurrentDirectory();
+    string[] csvFiles = Directory.GetFiles(currentDirectory, "data_*.csv");
+    string[] csv = new string[data.Length + 1];
+    csv[0] = $"Date, Time;Voltage, {UnitAbbreviationsCache.Default.GetDefaultAbbreviation(data.Span[0].Voltage.Unit)};Current, {UnitAbbreviationsCache.Default.GetDefaultAbbreviation(data.Span[0].Current.Unit)};Power, {UnitAbbreviationsCache.Default.GetDefaultAbbreviation(data.Span[0].Power.Unit)}\n";
+    
+    for (int i = 1; i < data.Length + 1; i++)
     {
-        worksheet.Range[i + 2, 1].Value = data.Span[i].DateTime.ToString();
-        worksheet.Range[i + 2, 2].Value = data.Span[i].Voltage.Value.ToString();
-        worksheet.Range[i + 2, 3].Value = data.Span[i].Current.Value.ToString();
-        worksheet.Range[i + 2, 4].Value = data.Span[i].Power.Value.ToString();
+        csv[i] = $"{data.Span[i - 1].DateTime};{data.Span[i - 1].Voltage.Value};{data.Span[i - 1].Current.Value};{data.Span[i - 1].Power.Value}\n";
     }
-
-    worksheet.AllocatedRange.AutoFitColumns();
-
-    workbook.SaveToFile("Results.xlsx");
+    using (var sw = new StreamWriter($"data_{csvFiles.Length}.csv"))
+    {
+        for (int i = 0; i < data.Length + 1; i++)
+        {
+            sw.Write(csv[i]);
+        }
+    }
 }
 public readonly record struct Storage(ElectricPotential Voltage, ElectricCurrent Current, Power Power, DateTimeOffset DateTime);
