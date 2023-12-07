@@ -1,0 +1,3 @@
+C:\Users\gavri\source\repos\practica4\n5\bin\Release\net8.0\publish\linux-arm64\n5.pdb
+C:\Users\gavri\source\repos\practica4\n5\bin\Release\net8.0\publish\linux-arm64\libSystem.IO.Ports.Native.so
+C:\Users\gavri\source\repos\practica4\n5\bin\Release\net8.0\publish\linux-arm64\n5
